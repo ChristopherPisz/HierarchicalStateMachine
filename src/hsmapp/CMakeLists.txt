@@ -3,8 +3,9 @@ include_directories(
 )
 
 add_executable(hsmapp
-    main.cpp
- )
+    #main.cpp
+    #type_erasure_poc.cpp
+    visitor.cpp)
 
 target_link_libraries(hsmapp PUBLIC
     hsmlib
