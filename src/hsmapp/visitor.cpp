@@ -28,55 +28,71 @@ struct GreenState
 	{}
 };
 
-/*
-* I needed a way to define the variant at compile time without knowing the user defined types
-*/
-template<typename... Types>
-class RegisteredEventTypes
-{
-	// Helper to determine if a type is part of the variant
-	template<typename T, typename VARIANT_T>
-	struct isVariantMember;
 
-	// Helper to determine if a type is part of the variant
-	template<typename T, typename... ALL_T>
-	struct isVariantMember<T, std::variant<ALL_T...>> : public std::disjunction<std::is_same<T, ALL_T>...> {};
+// A template to hold parameter pack types
+template<typename... >
+struct TypeList {};
+
+// Declaration of State Machine template
+template<typename StateTypeList, typename EventTypeList>
+class StateMachine;
+
+// Specialization of State Machine template
+template<typename... StateTypes, typename... EventTypes>
+class StateMachine<TypeList<StateTypes...>, TypeList<EventTypes...>>
+{
+	using EventVariantType = std::variant<EventTypes...>;
+	using StateVariantType = std::variant<StateTypes...>;
+
+	StateVariantType m_root;
 
 public:
-	using EventVariantType = std::variant<Types...>;
-
-	static constexpr size_t getNumEventTypes()
+	StateMachine(StateVariantType root)
 	{
-		return std::variant_size_v<EventVariantType>;
+		// TODO - Verification of state children conforming to UML Statechart rules
+		//        I think we need a base class for state, for children container
+		//        We then need to enforce statetypes are that type
 	}
 
-	template<typename T>
-	static constexpr bool isTypeRegistered()
+	template<typename FromStateType, typename ToStateType, typename EventType>
+	void registerTransition()
 	{
-		return isVariantMember <T, EventVariantType>::value;
+		// How to make a map of types
+	}
+
+	void queueEvent(std::shared_ptr<EventVariantType> event)
+	{
+		// I want the user to give me instances of the states, because I want the user to be able to DI any dependencies thier handlers have
+		//
+		// So, while I might take typenames as template params, I still need a way for them to give me the root node containing all the states
+		// and then verify all those children are registered.
+		//
+		// Then, once we have the actual states, we can find the instance, and make the call
 	}
 };
 
 
-int main()
-{
-	// Try out the template. The user will need to supply this to a registration method
-	using MyEventTypes = RegisteredEventTypes<std::shared_ptr<PedCrossingEvent>,
-			                                  std::shared_ptr<ProgramTimeElapsedEvent>,
-			                                  std::shared_ptr<NoProgramEvent>>;
 
-	// Test that it works
-	std::cout << MyEventTypes::getNumEventTypes() << std::endl;
-	std::cout << MyEventTypes::isTypeRegistered<std::shared_ptr<NoProgramEvent>>() << std::endl;
+	int main()
+	{
+		/*
+		// Try out the template. The user will need to supply this to a registration method
+		using MyEventTypes = RegisteredEventTypes<std::shared_ptr<PedCrossingEvent>,
+												  std::shared_ptr<ProgramTimeElapsedEvent>,
+												  std::shared_ptr<NoProgramEvent>>;
 
-	std::vector<MyEventTypes::EventVariantType> postedEvents = {
-		std::make_shared<PedCrossingEvent>(),
-		std::make_shared<ProgramTimeElapsedEvent>(),
-		std::make_shared<NoProgramEvent>()
-	};
+		// Test that it works
+		std::cout << MyEventTypes::getNumEventTypes() << std::endl;
+		std::cout << MyEventTypes::isTypeRegistered<std::shared_ptr<NoProgramEvent>>() << std::endl;
 
-	GreenState green;
-	std::visit([&green](auto&& arg) { green.enter(arg); }, postedEvents[0]);
+		std::vector<MyEventTypes::EventVariantType> postedEvents = {
+			std::make_shared<PedCrossingEvent>(),
+			std::make_shared<ProgramTimeElapsedEvent>(),
+			std::make_shared<NoProgramEvent>()
+		};
 
-	return 0;
-}
+		GreenState green;
+		std::visit([&green](auto&& arg) { green.enter(arg); }, postedEvents[0]);
+		*/
+		return 0;
+	}
